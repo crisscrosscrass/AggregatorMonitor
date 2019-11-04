@@ -9,6 +9,6 @@ public class HelloWorldController{
     @CrossOrigin(origins = "http://localhost:3000")
     @RequestMapping("/api/hello" )
     public String sayAPIHello(){
-        return "Hello User from Frontend, this is a message from Backend!";
+        return "Hello Frontend User, this is a message from Backend!";
     }
 }
