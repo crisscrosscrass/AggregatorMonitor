@@ -18,6 +18,12 @@ class App extends Component{
           }, err => {
             console.log("Server rejected response with: " + err);
           });
+          axios.post("http://localhost:8080/api/check", {data:"Hello Backend, this is a message from Frontend"}).then(res => {
+            console.log("Send something to the Server...");
+            console.log(res);
+          }, err => {
+            console.log("Server rejected response with: " + err);
+          });
     }
     render(){
     		return (
