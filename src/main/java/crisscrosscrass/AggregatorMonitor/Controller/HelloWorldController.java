@@ -1,6 +1,8 @@
 package crisscrosscrass.AggregatorMonitor.Controller;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+
 
 @RestController
 public class HelloWorldController{
@@ -26,4 +28,18 @@ public class HelloWorldController{
         System.out.println(model[1]);
         return "You have sended something to the backend!";
     }
+    @CrossOrigin(origins = "http://localhost:3000")
+    @RequestMapping("/api/something" )
+    public String sayAPIGet(){
+        final String uri = "http://10.1.110.13:8080/api/monitor/58";
+        System.out.println("Starting to fetch Data from IP:" + uri);
+
+        RestTemplate restTemplate = new RestTemplate();
+        String result = restTemplate.getForObject(uri, String.class);
+
+        System.out.println(result);
+
+        return result;
+    }
+
 }
