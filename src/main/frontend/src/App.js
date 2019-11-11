@@ -1,16 +1,18 @@
 import React, {Component} from 'react'
+import AmazonLastSyncedData from './components/data/AmazonLastSyncedData'
+import IdealoLastSyncedData from './components/data/IdealoLastSyncedData'
 /*
 
 import { Typography } from 'antd';
 */
 //import Button from 'antd/es/button'
-import { message, Button } from 'antd';
+import { message, Button, Modal, Popover } from 'antd';
 import { Input } from 'antd';
 import { Tabs } from 'antd';
 import { Collapse } from 'antd';
 import { Empty } from 'antd';
 import { Layout, Icon } from 'antd';
-import { Table, Divider, Tag } from 'antd';
+import { Table, Divider, Tag, Badge, Menu, Dropdown } from 'antd';
 
 
 import './App.css';
@@ -20,76 +22,13 @@ class App extends Component{
     constructor(){
     		super()
     		this.state = {
+                  loading: false,
+                  visible: false,
                   backend_message: null,
                   user_message: "",
                   isLoaded: true,
-                  AmazonDataList : [
-                    {
-                    key:'0',
-                    "name":"Sync-Amazon",
-                    "identification":"Shop [58] [Amazon.de] [de_standardized_shoes_retail] delta",
-                    "mailRecipientsOnError":"techops@visual-meta.com",
-                    "startDate":1572537696000,
-                    "endDate":1572547888000,
-                    "lastUpdated":1572537888000,
-                    "auxData":"Batch size set to 256 lines (722 kB). pipeline id=[3055]\n\n\nCompletion Message: \nSYNC_EXCEPTION",
-                    "lastDuration":927838,
-                    "appProfile":"de.cluster.hadoop",
-                    "isChildVm":false,
-                    "maxRuntimeThreshold":36,
-                    "childVm":false
-                  },
-                  {
-                    key:'1',
-                    "name":"Sync-Amazon",
-                    "identification":"Shop [58] [Amazon.de] [de_standardized_furniture_retail] delta",
-                    "mailRecipientsOnError":"techops@visual-meta.com",
-                    "startDate":1572537707000,
-                    "endDate":1572537844000,
-                    "lastUpdated":1572537844000,
-                    "auxData":"SYNC_EXCEPTION",
-                    "lastDuration":199808,
-                    "appProfile":"de.cluster.hadoop",
-                    "isChildVm":false,
-                    "maxRuntimeThreshold":36,
-                    "childVm":false
-                  },
-                  
-                  ],
-                  IdealoDataList : [
-                    {
-                    key:'0',
-                    "name":"Sync-Idealo",
-                    "identification":"Shop [58] [Amazon.de] [de_standardized_shoes_retail] delta",
-                    "mailRecipientsOnError":"techops@visual-meta.com",
-                    "startDate":1572537696000,
-                    "endDate":1572537888000,
-                    "lastUpdated":1572537888000,
-                    "auxData":"Batch size set to 256 lines (722 kB). pipeline id=[3055]\n\n\nCompletion Message: \nSYNC_EXCEPTION",
-                    "lastDuration":927838,
-                    "appProfile":"de.cluster.hadoop",
-                    "isChildVm":false,
-                    "maxRuntimeThreshold":36,
-                    "childVm":false
-                  },
-                  {
-                    key:'1',
-                    "name":"Sync-Idealo",
-                    "identification":"Shop [58] [Amazon.de] [de_standardized_furniture_retail] delta",
-                    "mailRecipientsOnError":"techops@visual-meta.com",
-                    "startDate":1572537707000,
-                    "endDate":1572537844000,
-                    "lastUpdated":1572537844000,
-                    "auxData":"SYNC_EXCEPTION",
-                    "lastDuration":199808,
-                    "appProfile":"de.cluster.hadoop",
-                    "isChildVm":false,
-                    "maxRuntimeThreshold":36,
-                    "childVm":false
-                  },
-                  
-                  
-                  ],
+                  AmazonDataList : AmazonLastSyncedData,
+                  IdealoDataList : IdealoLastSyncedData,
                   EbayDataList : [],
                   BilligerDataList : [],
                   ConnexityDataList : []
@@ -142,12 +81,12 @@ class App extends Component{
   gettingDataFromServer(){
    message
       .loading('Action in progress..', 2.5)
-      .then(() => message.success('Loading finished', 2.5))
-   this.updateShopDataAmazon()
-   this.updateShopDataIdealo()
-   this.updateShopDataEbay()
-   this.updateShopDataBilliger()
-   this.updateShopDataConnexity()
+      .then(() => this.updateShopDataAmazon())
+      .then(() => this.updateShopDataIdealo())
+      .then(() => this.updateShopDataEbay())
+      .then(() => this.updateShopDataBilliger())
+      .then(() => this.updateShopDataConnexity())
+      //.then(() => message.success('Loading finished', 2.5))
   }
   updateShopDataAmazon(){
     axios.get("http://localhost:8080/api/Amazon").then(res => {
@@ -161,21 +100,6 @@ class App extends Component{
                 AmazonDataList:[...this.state.AmazonDataList,element]
               })
             });
-            /*
-            this.setState({
-              ShopDataList:[...this.state.ShopDataList, {
-                key: '5',
-                name: 'Amazon[58]-base-Item-Sync',
-                ack: '-',
-                autoack: '-',
-                FailedSync: 4,
-                synccontrolerrors: '3',
-                FeedDropsIncreases: '-1596709 (5.11%)',
-                PublishedDropsincreases:'',
-                tags: ['loser'],
-              }]
-            });
-            */
             console.log(this.state.AmazonDataList);
     }, err => {
             console.log("Server rejected response with: " + err);
@@ -254,12 +178,13 @@ class App extends Component{
   }
   showDateFromTimestamp(t){
     var myDate = new Date( t );
-    t = myDate.toGMTString()+" / "+myDate.toLocaleString();
+    // t = myDate.toGMTString()+" / "+myDate.toLocaleString();
+    t = myDate.toLocaleString();
     return t;
   }
   showSyncTime(startTime,endTime){
-    var startTime = new Date(startTime);
-    var endTime = new Date(endTime);
+    startTime = new Date(startTime);
+    endTime = new Date(endTime);
     var starthour = startTime.getHours();
     var endhour = endTime.getHours();
     //console.log(starthour);
@@ -271,6 +196,36 @@ class App extends Component{
       return syncTime + " hours";
     }
   }
+  CreateTicket(shopname,identification,errorMsg){
+    var Linebreak = "%0A";
+    var Jira = "https://visualmeta.atlassian.net/secure/CreateIssueDetails!init.jspa?pid=11000&issuetype=1&customfield_10807=10635&customfield_14338=14777&summary="+identification;
+    Jira += " - Aggregator Monitor&description=Hi, we noticed that the shop has a error message:";
+    Jira += ""+Linebreak+Linebreak+"Name%3A %2A"+shopname+"%2A";
+    Jira += ""+Linebreak+"identification%3A %2A"+identification+"%2A";
+    Jira += ""+Linebreak+"Sync Control Errors%3A %2A"+errorMsg+"%2A";
+    Jira += ""+Linebreak+Linebreak+"";
+    Jira += "Could you please have a look fix the issue?";
+    Jira += ""+Linebreak+Linebreak+"";
+    Jira += "Thank you";
+    console.log("open ticket")
+    console.log(Jira)
+    window.open(Jira);
+  }
+  showModal = () => {
+    this.setState({
+      visible: true,
+    });
+  };
+  handleOk = () => {
+    this.setState({ loading: true });
+    setTimeout(() => {
+      this.setState({ loading: false, visible: false });
+    }, 3000);
+  };
+
+  handleCancel = () => {
+    this.setState({ visible: false });
+  };
   render(){
     /* 
     const { Title } = Typography;
@@ -281,30 +236,30 @@ class App extends Component{
     const { Panel } = Collapse;
     const columns = [
       {
-        title: 'name',
+        title: 'Name',
         dataIndex: 'identification',
         key: 'identification',
         render: text => <span>{text}</span>,
       },
       {
-        title: 'ack',
+        title: 'Ack',
         dataIndex: 'ack',
         key: 'ack',
         render: text => <span>{text}</span>,
       },
       {
-        title: 'auto ack',
+        title: 'Auto ack',
         dataIndex: 'autoack',
         key: 'autoack',
       },
       {
         title: 'Failed Sync',
-        dataIndex: 'FailedSync',
-        key: 'FailedSync',
+        dataIndex: 'latestEmailTitle',
+        key: 'latestEmailTitle',
         render: text => <Tag color={'red'}>{text}</Tag>,
       },
       {
-        title: 'sync control errors',
+        title: 'Sync Control Errors',
         dataIndex: 'auxData',
         key: 'auxData',
       },
@@ -320,7 +275,7 @@ class App extends Component{
         key: 'PublishedDropsincreases',
       },
       {
-        title: 'last synced',
+        title: 'Last Synced',
         dataIndex: 'endDate',
         key: 'endDate',
         render: (text, record) => (
@@ -328,7 +283,7 @@ class App extends Component{
           ),
       },
       {
-        title: 'last updated',
+        title: 'Last Updated',
         dataIndex: 'lastUpdated',
         key: 'lastUpdated',
         render: (text, record) => (
@@ -336,7 +291,7 @@ class App extends Component{
           ),
       },
       {
-        title: 'new feed available?',
+        title: 'New Feed Available?',
         dataIndex: 'newfeedavailable?',
         key: 'newfeedavailable?',
       },
@@ -346,7 +301,7 @@ class App extends Component{
         key: 'Timesincelastitemresync',
       },
       {
-        title: 'sync Time',
+        title: 'Sync Time',
         dataIndex: 'syncTime',
         key: 'syncTime',
         render: (text, record) => (
@@ -369,9 +324,9 @@ class App extends Component{
         render: (text, record) => (
           <span>
             
-            <Button type="primary" icon="highlight" block onClick={this.gettingDataFromServer}>Add</Button>
+            <Button type="primary" icon="highlight" block onClick={this.showModal}>Add</Button>
             <Divider/>
-            <Button type="primary" icon="align-left" block onClick={this.gettingDataFromServer}>Show all</Button>
+            <Popover content={content} title="Notes"><Button type="primary" icon="align-left" block >Show all</Button></Popover>
           </span>
         ),
       },
@@ -379,42 +334,72 @@ class App extends Component{
         title: 'Create Ticket',
         key: 'createTicket',
         render: (text, record) => (
-          <Button type="edit" icon="plus-square" theme="twoTone">Ticket {record.name}</Button>
+          <Button type="edit" icon="plus-square" theme="twoTone" onClick={()=> this.CreateTicket(record.name,record.identification,record.auxData)}>Ticket {record.name}</Button>
           ),
       },
     ];
     const { TabPane } = Tabs;
+    const { visible, loading } = this.state;
+    const { TextArea } = Input;
+    const content = (
+      <div>
+        <p>No Nodes...</p>
+      </div>
+    );
     function callback(key) {
       console.log(key);
     }
-    /*
-    old
-    <div className="App">
-                  
-                </div>
-
-    <header className="App-header">
-                    <img src={logo} className="App-logo" alt="logo" />
-                    <p>
-                      Backend Message:
-                    </p>
-                    <i className="App-link" >
-                      {this.state.backend_message}
-                    </i>
-                    <div>
-                        Send Text to Backend:
-                        <Search placeholder="input search text"
-                    onSearch={this.handleSending}
-                    onChange={this.onChange}
-                    style={{ width: 200 }} enterButton="Send"/>
-                        {this.state.user_message}
-                        <Input placeholder="Basic usage" ref={ref => this.messageValue=ref} />
-                        <input placeholder="Basic usage" ref={ref => this.messageValue=ref} />
-                        <Button type="primary" value="Submit" onClick={this.handleClick}>Send</Button>
-                    </div>
-                  </header>
-    */
-
+    const menu = (
+      <Menu>
+        <Menu.Item>Action 1</Menu.Item>
+        <Menu.Item>Action 2</Menu.Item>
+      </Menu>
+    );
+    const expandedRowRender = () => {
+      const columns = [
+        { title: 'Date', dataIndex: 'date', key: 'date' },
+        { title: 'Name', dataIndex: 'name', key: 'name' },
+        {
+          title: 'Status',
+          key: 'state',
+          render: () => (
+            <span>
+              <Badge status="success" />
+              Finished
+            </span>
+          ),
+        },
+        { title: 'Upgrade Status', dataIndex: 'upgradeNum', key: 'upgradeNum' },
+        {
+          title: 'Action',
+          dataIndex: 'operation',
+          key: 'operation',
+          render: () => (
+            <span className="table-operation">
+              <a>Pause</a>
+              <a>Stop</a>
+              <Dropdown overlay={menu}>
+                <a>
+                  More <Icon type="down" />
+                </a>
+              </Dropdown>
+            </span>
+          ),
+        },
+      ];
+  
+      const data = [];
+      for (let i = 0; i < 3; ++i) {
+        data.push({
+          key: i,
+          date: '2014-12-24 23:12:00',
+          name: 'Error XYZ...',
+          upgradeNum: 'Upgraded: 56',
+        });
+      }
+      return <Table columns={columns} dataSource={data} pagination={false} />;
+    };
+    
    if(!isLoaded){
     return (
       <Header><p>Loading..</p></Header>
@@ -424,7 +409,23 @@ class App extends Component{
     		return (
                 
                 <Layout>
-                  <Header style={{ textAlign: 'center', color:'white', Height: 40 }}>Aggregator Monitor <Icon type="monitor" /></Header>
+                  <Modal
+                        visible={visible}
+                        title="Add Note"
+                        onOk={this.handleOk}
+                        onCancel={this.handleCancel}
+                        footer={[
+                          <Button key="back" onClick={this.handleCancel}>
+                            Close
+                          </Button>,
+                          <Button key="submit" type="primary" loading={loading} onClick={this.handleOk}>
+                            Submit
+                          </Button>,
+                        ]}
+                      >
+                       <TextArea rows={4} />
+                      </Modal>
+                  <Header style={{ textAlign: 'center', color:'white', Height: 40 }}><Icon type="appstore" theme="twoTone" twoToneColor="#fff"/>Aggregator Monitor</Header>
                   <Button type="primary" icon="sync" block onClick={this.gettingDataFromServer}>REFRESH</Button>
                   <Search placeholder="Search..."
                     onSearch={this.handleSending}
@@ -434,19 +435,19 @@ class App extends Component{
                       <TabPane tab="DE" key="1">
                         <Collapse defaultActiveKey={["1", "2"]} onChange={callback}>
                           <Panel header="AMAZON" key="1">
-                            <Table columns={columns} dataSource={this.state.AmazonDataList} />
+                            <Table columns={columns} dataSource={this.state.AmazonDataList} expandedRowRender={expandedRowRender} bordered size="small"/>
                           </Panel>
                           <Panel header="IDEALO" key="2">
-                            <Table columns={columns} dataSource={this.state.IdealoDataList} />
+                            <Table columns={columns} dataSource={this.state.IdealoDataList} expandedRowRender={expandedRowRender} bordered size="small"/>
                           </Panel>
                           <Panel header="EBAY" key="3">
-                            <Table columns={columns} dataSource={this.state.EbayDataList} />
+                            <Table columns={columns} dataSource={this.state.EbayDataList} expandedRowRender={expandedRowRender} bordered size="small"/>
                           </Panel>
                           <Panel header="BILLIGER" key="4">
-                            <Table columns={columns} dataSource={this.state.BilligerDataList} />
+                            <Table columns={columns} dataSource={this.state.BilligerDataList} expandedRowRender={expandedRowRender} bordered size="small"/>
                           </Panel>
                           <Panel header="CONNEXITY" key="5">
-                            <Table columns={columns} dataSource={this.state.ConnexityDataList} />
+                            <Table columns={columns} dataSource={this.state.ConnexityDataList} expandedRowRender={expandedRowRender} bordered size="small"/>
                           </Panel>
                           <Panel header="YOOX" key="6">
                             <Empty />
@@ -457,6 +458,36 @@ class App extends Component{
                         <Empty />
                       </TabPane>
                       <TabPane tab="NL" key="3">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="DK" key="4">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="ES" key="5">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="FI" key="6">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="FR" key="7">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="CZ" key="8">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="HU" key="9">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="IT" key="10">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="PL" key="11">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="SE" key="12">
+                      <Empty />
+                      </TabPane>
+                      <TabPane tab="SK" key="13">
                       <Empty />
                       </TabPane>
                     </Tabs>
