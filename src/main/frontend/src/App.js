@@ -495,7 +495,7 @@ class App extends Component{
                           <Content style={{ padding: '0 50px' }}>
                             
                           </Content>
-                          <Footer style={{ textAlign: 'center' }}>©2019</Footer>
+                          <Footer style={{ textAlign: 'center' }}>©2020</Footer>
               </Layout>
               )
   }
